@@ -231,7 +231,7 @@ client.on('interactionCreate', async interaction => {
     const channel = client.channels.cache.get('1260910228031930458');
     if (channel) {
       await channel.send({ embeds: [embed] });
-      await channel.send('<@&YOUR_ROLE_ID> ^^^^^');
+      await channel.send('<@&1260910227184943238> ^^^^^');
       await interaction.reply({ content: 'Friendly request submitted!', ephemeral: true });
 
       usedFriendlyCommand.add(interaction.user.id);
