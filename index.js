@@ -1,9 +1,10 @@
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActivityType, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel, MessageEmbed } = require('discord.js');
 const noblox = require('noblox.js');
 require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages] 
@@ -17,7 +18,7 @@ const groupId = 32304173; // PRL Professional Roblox League group ID
 
 const usedFriendlyCommand = new Set();
 
-const statusMessages = ["Watching Over VRS", "Watching Over VRS"];
+const statusMessages = ["Over VRS", "Over VRS"];
 let currentIndex = 0;
 const port = 3000;
 const app = express();
@@ -119,23 +120,57 @@ client.on('interactionCreate', async interaction => {
     const user = interaction.options.getUser('user');
     const teamName = interaction.options.getString('teamname');
 
-    const embed = {
-      color: 0x00ff00,
-      title: 'New Signing!',
-      description: `${user} has been signed to ${teamName}!`,
-      timestamp: new Date(),
-      footer: {
-        text: 'Team Signing',
-      },
-    };
+    const embed = new MessageEmbed()
+      .setColor(0x00ff00)
+      .setTitle('Team Invitation')
+      .setDescription(`You have been invited to join the team: **${teamName}**`)
+      .setTimestamp();
 
-    const channel = client.channels.cache.get('1260910228031930455');
-    if (channel) {
-      await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: 'Sign message sent!', ephemeral: true });
-    } else {
-      await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('accept')
+          .setLabel('Accept')
+          .setStyle(ButtonStyle.SUCCESS),
+        new ButtonBuilder()
+          .setCustomId('reject')
+          .setLabel('Reject')
+          .setStyle(ButtonStyle.DANGER)
+      );
+
+    try {
+      await user.send({ embeds: [embed], components: [row] });
+      await interaction.reply({ content: `Invitation sent to ${user.tag} to join ${teamName}.`, ephemeral: true });
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({ content: `Could not send a DM to ${user.tag}. They might have DMs disabled.`, ephemeral: true });
     }
+
+    const filter = i => i.user.id === user.id && (i.customId === 'accept' || i.customId === 'reject');
+    const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
+
+    collector.on('collect', async i => {
+      if (i.customId === 'accept') {
+        db.run(`INSERT INTO players (user, team) VALUES (?, ?)`, [user.tag, teamName], function (err) {
+          if (err) {
+            return console.error(err.message);
+          }
+          i.update({ content: `You have accepted the invitation to join ${teamName}.`, components: [] });
+          const teamChannel = client.channels.cache.get('1260910228031930456'); // Replace with your channel ID
+          if (teamChannel) {
+            teamChannel.send(`${user.tag} has joined ${teamName}!`);
+          }
+        });
+      } else if (i.customId === 'reject') {
+        i.update({ content: 'You have rejected the invitation.', components: [] });
+      }
+    });
+
+    collector.on('end', collected => {
+      if (collected.size === 0) {
+        user.send('You did not respond to the team invitation in time.');
+      }
+    });
   } else if (commandName === 'request') {
     const username = interaction.options.getString('username');
     const pastExperiences = interaction.options.getString('past_experiences');
