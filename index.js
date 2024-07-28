@@ -66,7 +66,7 @@ client.on('interactionCreate', async interaction => {
   const { commandName } = interaction;
 
   if (commandName === 'scrim') {
-    const team = interaction.options.getString('team');
+    const team = interaction.options.getString('Hoster');
     const details = interaction.options.getString('details');
 
     const embed = {
