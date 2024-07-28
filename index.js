@@ -212,27 +212,31 @@ client.on('interactionCreate', async interaction => {
           await channel.send(`Rejected ${username} from the group.`);
         }
       });
-
-      collector.on('end', collected => {
-        console.log(`Collected ${collected.size} interactions.`);
-      });
+    } else {
+      await interaction.editReply({ content: 'Failed to find the specified channel.', ephemeral: true });
     }
   } else if (commandName === 'friendly') {
     const teamName = interaction.options.getString('team_name');
     const information = interaction.options.getString('information');
-    const requiredRole = '1260910227184943238'; // Replace with the actual role ID that can use this command
-    const pingRole = '1260910227184943238'; // Replace with the actual role ID to ping
 
-    if (!interaction.member.roles.cache.has(requiredRole)) {
+    const userRole = '1260910227278499841';
+    const notifyRole = '1260910227207325809';
+
+    if (!interaction.member.roles.cache.has(userRole)) {
       await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
       return;
     }
 
+    if (usedFriendlyCommand.has(interaction.user.id)) {
+      await interaction.reply({ content: 'You have already used this command recently. Please wait before using it again.', ephemeral: true });
+      return;
+    }
+
     const embed = {
-      color: 0x1abc9c,
+      color: 0xff0000,
       title: 'Friendly Request',
+      description: `${teamName} is looking for a friendly match!`,
       fields: [
-        { name: 'Team Name', value: teamName },
         { name: 'Information', value: information },
       ],
       timestamp: new Date(),
@@ -241,10 +245,15 @@ client.on('interactionCreate', async interaction => {
       },
     };
 
-    const channel = client.channels.cache.get('1260910228031930458'); // Replace with the actual channel ID
+    const channel = client.channels.cache.get('1260910228031930457');
     if (channel) {
-      await channel.send({ content: `<@&${pingRole}>`, embeds: [embed] });
+      await channel.send({ embeds: [embed], content: `<@&${notifyRole}>` });
       await interaction.reply({ content: 'Friendly request sent!', ephemeral: true });
+      usedFriendlyCommand.add(interaction.user.id);
+
+      setTimeout(() => {
+        usedFriendlyCommand.delete(interaction.user.id);
+      }, 86400000); // 24 hours
     } else {
       await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
     }
@@ -252,11 +261,18 @@ client.on('interactionCreate', async interaction => {
     const hoster = interaction.options.getString('hoster');
     const details = interaction.options.getString('details');
 
+    const userRoleId = '1262465654317908060';
+
+    if (!interaction.member.roles.cache.has(userRoleId)) {
+      await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+      return;
+    }
+
     const embed = {
-      color: 0xff0000,
+      color: 0x00ffff,
       title: 'Scrim Request',
+      description: `A new scrim request by ${hoster}!`,
       fields: [
-        { name: 'Hoster', value: hoster },
         { name: 'Details', value: details },
       ],
       timestamp: new Date(),
@@ -275,16 +291,9 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Function to update status message and send messages to a specific channel
 function updateStatusAndSendMessages() {
-  const channel = client.channels.cache.get('');
-  if (channel) {
-    channel.send('!');
-  }
-
-  const newIndex = (currentIndex + 1) % statusMessages.length;
-  client.user.setActivity(statusMessages[newIndex], { type: ActivityType.Watching });
-  currentIndex = newIndex;
+  client.user.setActivity(statusMessages[currentIndex], { type: ActivityType.Watching });
+  currentIndex = (currentIndex + 1) % statusMessages.length;
 }
 
 client.login(token);
