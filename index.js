@@ -134,12 +134,21 @@ client.on('interactionCreate', async interaction => {
           try {
             const users = await noblox.getJoinRequests(groupId);
             const userRequest = users.data.find(user => user.requester.username === robloxUser);
+
             if (userRequest) {
               await noblox.handleJoinRequest(groupId, userRequest.requester.userId, true);
               await i.update({ content: 'User has been accepted into the group!', components: [] });
+              await channel.send(`User ${robloxUser} has been accepted to the group!`);
               await discordUser.send(`You have been accepted to the group!`);
             } else {
-              await i.update({ content: 'User not found in join requests.', components: [] });
+              const isMember = await noblox.getRankInGroup(groupId, robloxUser);
+              if (isMember > 0) {
+                await i.update({ content: 'Player has already been accepted!', components: [] });
+                await channel.send(`Player ${robloxUser} has already been accepted!`);
+              } else {
+                await i.update({ content: 'Player cannot be found in group pendings.', components: [] });
+                await channel.send(`Player ${robloxUser} cannot be found in group pendings.`);
+              }
             }
           } catch (error) {
             console.error(error);
