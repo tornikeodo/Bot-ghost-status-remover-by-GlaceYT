@@ -82,7 +82,7 @@ client.on('interactionCreate', async interaction => {
       },
     };
 
-    const channel = client.channels.cache.get('SPECIFIC_CHANNEL_ID'); // Replace with your channel ID
+    const channel = client.channels.cache.get('1260910228199968901'); // Replace with your channel ID
     if (channel) {
       const message = await channel.send({ embeds: [embed] });
       await message.react('✅');
@@ -121,7 +121,7 @@ client.on('interactionCreate', async interaction => {
           .setStyle(ButtonStyle.Danger)
       );
 
-    const channel = client.channels.cache.get('SPECIFIC_CHANNEL_ID'); // Replace with your channel ID
+    const channel = client.channels.cache.get('1260910227696390192'); // Replace with your channel ID
     if (channel) {
       const message = await channel.send({ embeds: [embed], components: [row] });
       await interaction.reply({ content: 'Join request sent!', ephemeral: true });
