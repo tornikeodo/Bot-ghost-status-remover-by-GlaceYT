@@ -204,8 +204,8 @@ client.on('interactionCreate', async interaction => {
     const hoster = interaction.options.getString('hoster');
     const details = interaction.options.getString('details');
 
-    const specificRole = 'ROLE_ID'; // Replace with the role ID
-    const pingRole = 'ROLE_ID'; // Replace with the role ID
+    const specificRole = '1262465654317908060'; // Replace with the role ID
+    const pingRole = '1260910227155325018'; // Replace with the role ID
 
     if (!interaction.member.roles.cache.has(specificRole)) {
       await interaction.reply({ content: 'You do not have the required role to use this command.', ephemeral: true });
@@ -225,7 +225,7 @@ client.on('interactionCreate', async interaction => {
       },
     };
 
-    const channel = client.channels.cache.get('SPECIFIC_CHANNEL_ID'); // Replace with your specific channel ID
+    const channel = client.channels.cache.get('1260910228199968901'); // Replace with your specific channel ID
     if (channel) {
       const message = await channel.send({ content: `<@&${pingRole}>`, embeds: [embed] });
       await interaction.reply('Your scrim request has been submitted.');
