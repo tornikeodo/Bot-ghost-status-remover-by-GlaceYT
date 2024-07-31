@@ -243,7 +243,7 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Failed to find the channel.');
       }
     }
- } else if (commandName === 'scrim') {
+} else if (commandName === 'scrim') {
     const hoster = interaction.options.getString('hoster');
     const details = interaction.options.getString('details');
 
@@ -267,6 +267,40 @@ client.on('interactionCreate', async interaction => {
         text: 'Scrim Request',
       },
     };
+
+    const channel = client.channels.cache.get('1260910228199968901'); // Replace with your specific channel ID
+    if (channel) {
+      const message = await channel.send({ content: `<@&${pingRole}>`, embeds: [embed] });
+      await interaction.reply('Your scrim request has been submitted.');
+
+      await message.react('✅');
+      await message.react('❌');
+
+      const filter = (reaction, user) => ['✅', '❌'].includes(reaction.emoji.name) && !user.bot;
+
+      const collector = message.createReactionCollector({ filter, time: 60000 });
+
+      collector.on('collect', async (reaction, user) => {
+        if (reaction.emoji.name === '✅') {
+          await channel.send(`Scrim request accepted by ${user.tag}`);
+        } else if (reaction.emoji.name === '❌') {
+          await channel.send(`Scrim request rejected by ${user.tag}`);
+        }
+      });
+
+      collector.on('end', collected => {
+        console.log(`Collected ${collected.size} reactions.`);
+      });
+
+      // Send the link in a separate message
+      const linkMessage = 'Here is the link to the scrim request: <insert-your-link-here>'; // Replace with your link
+      await channel.send(linkMessage);
+
+    } else {
+      await interaction.reply('Failed to find the channel.');
+    }
+  }
+});
 
     const channel = client.channels.cache.get('1260910228199968901'); // Replace with your specific channel ID
     if (channel) {
