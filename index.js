@@ -144,31 +144,74 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply('Failed to find the channel.');
     }
   } else if (commandName === 'request') {
-    const username = interaction.options.getString('username');
-    const pastExperiences = interaction.options.getString('past_experiences');
-    const howDidYouFindTheLeague = interaction.options.getString('how_did_you_find_the_league');
+        const username = interaction.options.getString('username');
+        const pastExperiences = interaction.options.getString('past_experiences');
+        const howDidYouFindTheLeague = interaction.options.getString('how_did_you_find_the_league');
 
-    const embed = {
-      color: 0x0099ff,
-      title: 'Request to Join League',
-      fields: [
-        { name: 'Username', value: username },
-        { name: 'Past Experiences', value: pastExperiences },
-        { name: 'How did you find the league?', value: howDidYouFindTheLeague },
-      ],
-      timestamp: new Date(),
-      footer: {
-        text: 'Request to Join League',
-      },
-    };
+        await interaction.deferReply({ ephemeral: true });
 
-    const channel = client.channels.cache.get('1260910228031930455');
-    if (channel) {
-      await channel.send({ embeds: [embed] });
-      await interaction.reply('Your request to join the league has been submitted.');
-    } else {
-      await interaction.reply('Failed to find the channel.');
-    }
+        const embed = {
+            color: 0x0000ff,
+            title: 'League Request',
+            fields: [
+                { name: 'Username', value: username },
+                { name: 'Past Experiences', value: pastExperiences },
+                { name: 'How did you find the league?', value: howDidYouFindTheLeague },
+            ],
+            timestamp: new Date(),
+            footer: {
+                text: 'League Request',
+            },
+        };
+
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('accept')
+                    .setLabel('✅')
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId('reject')
+                    .setLabel('❌')
+                    .setStyle(ButtonStyle.Danger)
+            );
+
+        const channel = client.channels.cache.get('YOUR_CHANNEL_ID');
+        if (channel) {
+            const message = await channel.send({ embeds: [embed], components: [row] });
+            await interaction.editReply({ content: 'Request sent!', ephemeral: true });
+
+            const filter = i => i.customId === 'accept' || i.customId === 'reject';
+            const collector = message.createMessageComponentCollector({ filter, time: 60000 });
+
+            collector.on('collect', async i => {
+                if (i.customId === 'accept') {
+                    try {
+                        const users = await noblox.getJoinRequests(groupId);
+                        const userRequest = users.data.find(user => user.requester.username === username);
+                        if (userRequest) {
+                            await noblox.handleJoinRequest(groupId, userRequest.requester.userId, true);
+                            await i.deferUpdate();
+                            await interaction.user.send('You have been accepted to the group!');
+                        } else {
+                            await i.update({ content: 'User not found in join requests.', ephemeral: true });
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        await i.update({ content: 'An error occurred while accepting the request.', ephemeral: true });
+                    }
+                } else if (i.customId === 'reject') {
+                    await i.deferUpdate();
+                    await interaction.user.send('You have been rejected from the group!');
+                }
+            });
+
+            collector.on('end', collected => {
+                console.log(`Collected ${collected.size} interactions.`);
+            });
+        } else {
+            await interaction.editReply({ content: 'Failed to find the specified channel.', ephemeral: true });
+        }
   } else if (commandName === 'friendly') {
     const teamName = interaction.options.getString('team_name');
     const information = interaction.options.getString('information');
