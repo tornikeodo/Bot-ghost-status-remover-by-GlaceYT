@@ -176,7 +176,7 @@ client.on('interactionCreate', async interaction => {
                     .setStyle(ButtonStyle.Danger)
             );
 
-        const channel = client.channels.cache.get('YOUR_CHANNEL_ID');
+        const channel = client.channels.cache.get('1260910227696390192');
         if (channel) {
             const message = await channel.send({ embeds: [embed], components: [row] });
             await interaction.editReply({ content: 'Request sent!', ephemeral: true });
