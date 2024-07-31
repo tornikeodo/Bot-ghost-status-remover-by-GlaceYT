@@ -70,7 +70,7 @@ const commands = [
     .addStringOption(option => option.setName('information').setDescription('Information about the request').setRequired(true)),
   new SlashCommandBuilder().setName('scrim')
     .setDescription('Post a scrim request.')
-    .addStringOption(option => option.setName('hoster').setDescription('The hoster').setRequired(true))
+    .addStringOption(option => option.setName('servername').setDescription('the name of the server').setRequired(true))
     .addStringOption(option => option.setName('details').setDescription('Details of the scrim').setRequired(true))
 ].map(command => command.toJSON());
 
@@ -244,7 +244,7 @@ client.on('interactionCreate', async interaction => {
       }
     }
   } else if (commandName === 'scrim') {
-    const hoster = interaction.options.getString('hoster');
+    const servername = interaction.options.getString('servername');
     const details = interaction.options.getString('details');
 
     const specificRole = '1262465654317908060'; // Replace with the role ID
@@ -259,7 +259,7 @@ client.on('interactionCreate', async interaction => {
       color: 0x0099ff,
       title: 'Scrim Request',
       fields: [
-        { name: 'Hoster', value: hoster },
+        { name: 'Server Name', value: servername },
         { name: 'Details', value: details },
       ],
       timestamp: new Date(),
@@ -291,7 +291,7 @@ client.on('interactionCreate', async interaction => {
       collector.on('end', collected => {
         console.log(`Collected ${collected.size} reactions.`);
       });
-
+  
       // Send a message with the link in the same channel
       const link = 'https://www.roblox.com/games/14824351179/VRS-Hub'; // Replace with your actual link
       await channel.send(`Match Pitch: ${link}`);
