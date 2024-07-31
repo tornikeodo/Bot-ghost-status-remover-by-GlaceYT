@@ -71,7 +71,6 @@ const commands = [
   new SlashCommandBuilder().setName('scrim')
     .setDescription('Post a scrim request.')
     .addStringOption(option => option.setName('servername').setDescription('the name of the server').setRequired(true))
-    .addStringOption(option => option.setName('details').setDescription('Details of the scrim').setRequired(true))
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(token);
@@ -212,37 +211,41 @@ client.on('interactionCreate', async interaction => {
         } else {
             await interaction.editReply({ content: 'Failed to find the specified channel.', ephemeral: true });
         }
-  } else if (commandName === 'friendly') {
-    const teamName = interaction.options.getString('team_name');
-    const information = interaction.options.getString('information');
-
-    if (usedFriendlyCommand.has(interaction.user.id)) {
-      await interaction.reply('You can only use this command once per 24 hours.');
-    } else {
-      usedFriendlyCommand.add(interaction.user.id);
-      setTimeout(() => usedFriendlyCommand.delete(interaction.user.id), 24 * 60 * 60 * 1000);
-
-      const embed = {
-        color: 0x0099ff,
-        title: 'Friendly Request',
-        fields: [
-          { name: 'Team Name', value: teamName },
-          { name: 'Information', value: information },
-        ],
-        timestamp: new Date(),
-        footer: {
-          text: 'Friendly Request',
-        },
-      };
-
-      const channel = client.channels.cache.get('1260910228031930458');
-      if (channel) {
-        await channel.send({ embeds: [embed] });
-        await interaction.reply('Your friendly request has been submitted.');
-      } else {
-        await interaction.reply('Failed to find the channel.');
-      }
-    }
+      } else if (commandName === 'friendly') {
+        const teamName = interaction.options.getString('team_name');
+        const information = interaction.options.getString('information');
+    
+        if (usedFriendlyCommand.has(interaction.user.id)) {
+          await interaction.reply('You can only use this command once per 24 hours.');
+        } else {
+          usedFriendlyCommand.add(interaction.user.id);
+          setTimeout(() => usedFriendlyCommand.delete(interaction.user.id), 24 * 60 * 60 * 1000);
+    
+          const roleId = '1260910227184943238'; // Replace with the actual role ID
+          const roleMention = `<@&${roleId}>`;
+    
+          const embed = {
+            color: 0x0099ff,
+            title: 'Friendly Request',
+            fields: [
+              { name: 'Team Name', value: teamName },
+              { name: 'Information', value: information },
+            ],
+            timestamp: new Date(),
+            footer: {
+              text: 'Friendly Request',
+            },
+          };
+    
+          const channel = client.channels.cache.get('1260910228031930458');
+          if (channel) {
+            await channel.send({ content: roleMention, embeds: [embed] });
+            await interaction.reply('Your friendly request has been submitted.');
+          } else {
+            await interaction.reply('Failed to find the channel.');
+          }
+        }
+    
   } else if (commandName === 'scrim') {
     const servername = interaction.options.getString('servername');
     const details = interaction.options.getString('details');
@@ -260,7 +263,7 @@ client.on('interactionCreate', async interaction => {
       title: 'Scrim Request',
       fields: [
         { name: 'Server Name', value: servername },
-        { name: 'Details', value: details },
+       
       ],
       timestamp: new Date(),
       footer: {
