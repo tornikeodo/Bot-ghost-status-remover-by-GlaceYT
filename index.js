@@ -188,7 +188,7 @@ client.on('interactionCreate', async interaction => {
         },
       };
 
-      const channel = client.channels.cache.get('1260910228031930455');
+      const channel = client.channels.cache.get('1260910228031930458');
       if (channel) {
         await channel.send({ embeds: [embed] });
         await interaction.reply('Your friendly request has been submitted.');
