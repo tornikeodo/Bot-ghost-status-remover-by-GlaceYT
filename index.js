@@ -243,7 +243,7 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Failed to find the channel.');
       }
     }
-  } else if (commandName === 'scrim') {
+ } else if (commandName === 'scrim') {
     const hoster = interaction.options.getString('hoster');
     const details = interaction.options.getString('details');
 
@@ -291,6 +291,11 @@ client.on('interactionCreate', async interaction => {
       collector.on('end', collected => {
         console.log(`Collected ${collected.size} reactions.`);
       });
+
+      // Send the link in a separate message
+      const linkMessage = 'Match pitch: <https://www.roblox.com/games/14824351179/VRS-Hub>'; // Replace with your link
+      await channel.send(linkMessage);
+
     } else {
       await interaction.reply('Failed to find the channel.');
     }
