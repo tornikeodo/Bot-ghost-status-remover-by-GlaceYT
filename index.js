@@ -67,11 +67,7 @@ const commands = [
   new SlashCommandBuilder().setName('friendly')
     .setDescription('Post a friendly request.')
     .addStringOption(option => option.setName('team_name').setDescription('The team name').setRequired(true))
-    .addStringOption(option => option.setName('information').setDescription('Information about the request').setRequired(true)),
-  new SlashCommandBuilder().setName('scrim')
-    .setDescription('Post a scrim request.')
-    .addStringOption(option => option.setName('hoster').setDescription('Hoster of the scrim').setRequired(true))
-    .addStringOption(option => option.setName('details').setDescription('Details of the scrim').setRequired(true))
+    .addStringOption(option => option.setName('information').setDescription('Information about the request').setRequired(true))
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(token);
@@ -115,41 +111,42 @@ client.on('interactionCreate', async interaction => {
     const channel = client.channels.cache.get('1260910228031930455');
     if (channel) {
       await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: 'Application submitted!', ephemeral: true });
+      await interaction.reply('Your free agent application has been submitted.');
     } else {
-      await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
+      await interaction.reply('Failed to find the channel.');
     }
   } else if (commandName === 'sign') {
     const user = interaction.options.getUser('user');
     const teamName = interaction.options.getString('teamname');
 
     const embed = {
-      color: 0x00ff00,
-      title: 'New Signing!',
-      description: `${user} has been signed to ${teamName}!`,
+      color: 0x0099ff,
+      title: 'New Sign',
+      fields: [
+        { name: 'User', value: user.tag },
+        { name: 'Team Name', value: teamName },
+      ],
       timestamp: new Date(),
       footer: {
-        text: 'Team Signing',
+        text: 'New Sign',
       },
     };
 
-    const channel = client.channels.cache.get('1260910228031930456');
+    const channel = client.channels.cache.get('1260910228031930455');
     if (channel) {
       await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: 'Sign message sent!', ephemeral: true });
+      await interaction.reply(`Signed ${user.tag} to ${teamName}.`);
     } else {
-      await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
+      await interaction.reply('Failed to find the channel.');
     }
   } else if (commandName === 'request') {
     const username = interaction.options.getString('username');
     const pastExperiences = interaction.options.getString('past_experiences');
     const howDidYouFindTheLeague = interaction.options.getString('how_did_you_find_the_league');
 
-    await interaction.deferReply({ ephemeral: true });
-
     const embed = {
-      color: 0x0000ff,
-      title: 'League Request',
+      color: 0x0099ff,
+      title: 'Request to Join League',
       fields: [
         { name: 'Username', value: username },
         { name: 'Past Experiences', value: pastExperiences },
@@ -157,143 +154,55 @@ client.on('interactionCreate', async interaction => {
       ],
       timestamp: new Date(),
       footer: {
-        text: 'League Request',
+        text: 'Request to Join League',
       },
     };
 
-    const row = new ActionRowBuilder()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId('accept')
-          .setLabel('✅')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId('reject')
-          .setLabel('❌')
-          .setStyle(ButtonStyle.Danger)
-      );
-
-    const channel = client.channels.cache.get('1260910227696390192');
+    const channel = client.channels.cache.get('1260910228031930455');
     if (channel) {
-      const message = await channel.send({ embeds: [embed], components: [row] });
-      await interaction.editReply({ content: 'Request sent!', ephemeral: true });
-
-      const filter = i => i.customId === 'accept' || i.customId === 'reject';
-      const collector = message.createMessageComponentCollector({ filter, time: 60000 });
-
-      collector.on('collect', async i => {
-        if (i.customId === 'accept') {
-          try {
-            const users = await noblox.getJoinRequests(groupId);
-            const userRequest = users.data.find(user => user.requester.username === username);
-
-            if (userRequest) {
-              await noblox.handleJoinRequest(groupId, userRequest.requester.userId, true);
-              await i.update({ content: `Accepted ${username} to the group!`, ephemeral: true });
-              await channel.send(`Accepted ${username} to the group!`);
-            } else {
-              const allMembers = await noblox.getPlayers({ groupId });
-              const userExists = allMembers.find(member => member.username === username);
-
-              if (userExists) {
-                await i.update({ content: `${username} has already been accepted!`, ephemeral: true });
-                await channel.send(`${username} has already been accepted!`);
-              } else {
-                await i.update({ content: `Player ${username} cannot be found in group pendings.`, ephemeral: true });
-                await channel.send(`Player ${username} cannot be found in group pendings.`);
-              }
-            }
-          } catch (error) {
-            console.error(error);
-            await i.update({ content: 'An error occurred while accepting the request.', ephemeral: true });
-          }
-        } else if (i.customId === 'reject') {
-          await i.update({ content: `Rejected ${username} from the group.`, ephemeral: true });
-          await channel.send(`Rejected ${username} from the group.`);
-        }
-      });
+      await channel.send({ embeds: [embed] });
+      await interaction.reply('Your request to join the league has been submitted.');
     } else {
-      await interaction.editReply({ content: 'Failed to find the specified channel.', ephemeral: true });
+      await interaction.reply('Failed to find the channel.');
     }
   } else if (commandName === 'friendly') {
     const teamName = interaction.options.getString('team_name');
     const information = interaction.options.getString('information');
 
-    const userRole = '1260910227278499841';
-    const notifyRole = '1260910227207325809';
-
-    if (!interaction.member.roles.cache.has(userRole)) {
-      await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
-      return;
-    }
-
     if (usedFriendlyCommand.has(interaction.user.id)) {
-      await interaction.reply({ content: 'You have already used this command recently. Please wait before using it again.', ephemeral: true });
-      return;
-    }
-
-    const embed = {
-      color: 0xff0000,
-      title: 'Friendly Request',
-      description: `${teamName} is looking for a friendly match!`,
-      fields: [
-        { name: 'Information', value: information },
-      ],
-      timestamp: new Date(),
-      footer: {
-        text: 'Friendly Request',
-      },
-    };
-
-    const channel = client.channels.cache.get('1260910228031930457');
-    if (channel) {
-      await channel.send({ embeds: [embed], content: `<@&${notifyRole}>` });
-      await interaction.reply({ content: 'Friendly request sent!', ephemeral: true });
+      await interaction.reply('You can only use this command once per 24 hours.');
+    } else {
       usedFriendlyCommand.add(interaction.user.id);
+      setTimeout(() => usedFriendlyCommand.delete(interaction.user.id), 24 * 60 * 60 * 1000);
 
-      setTimeout(() => {
-        usedFriendlyCommand.delete(interaction.user.id);
-      }, 86400000); // 24 hours
-    } else {
-      await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
-    }
-  } else if (commandName === 'scrim') {
-    const hoster = interaction.options.getString('hoster');
-    const details = interaction.options.getString('details');
+      const embed = {
+        color: 0x0099ff,
+        title: 'Friendly Request',
+        fields: [
+          { name: 'Team Name', value: teamName },
+          { name: 'Information', value: information },
+        ],
+        timestamp: new Date(),
+        footer: {
+          text: 'Friendly Request',
+        },
+      };
 
-    const userRoleId = '1262465654317908060';
-
-    if (!interaction.member.roles.cache.has(userRoleId)) {
-      await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
-      return;
-    }
-
-    const embed = {
-      color: 0x00ffff,
-      title: 'Scrim Request',
-      description: `A new scrim request by ${hoster}!`,
-      fields: [
-        { name: 'Details', value: details },
-      ],
-      timestamp: new Date(),
-      footer: {
-        text: 'Scrim Request',
-      },
-    };
-
-    const channel = client.channels.cache.get('1260910228199968901');
-    if (channel) {
-      await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: 'Scrim request sent!', ephemeral: true });
-    } else {
-      await interaction.reply({ content: 'Failed to find the specified channel.', ephemeral: true });
+      const channel = client.channels.cache.get('1260910228031930455');
+      if (channel) {
+        await channel.send({ embeds: [embed] });
+        await interaction.reply('Your friendly request has been submitted.');
+      } else {
+        await interaction.reply('Failed to find the channel.');
+      }
     }
   }
 });
 
 function updateStatusAndSendMessages() {
-  client.user.setActivity(statusMessages[currentIndex], { type: ActivityType.Watching });
+  const status = statusMessages[currentIndex];
   currentIndex = (currentIndex + 1) % statusMessages.length;
+  client.user.setActivity(status, { type: ActivityType.Watching });
 }
 
 client.login(token);
