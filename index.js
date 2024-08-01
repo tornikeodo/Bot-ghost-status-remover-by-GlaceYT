@@ -131,11 +131,11 @@ client.on('interactionCreate', async interaction => {
       ],
       timestamp: new Date(),
       footer: {
-        text: 'New Sign',
+        text: 'New Signing!',
       },
     };
 
-    const channel = client.channels.cache.get('1260910228031930455');
+    const channel = client.channels.cache.get('1260910228031930456');
     if (channel) {
       await channel.send({ embeds: [embed] });
       await interaction.reply(`Signed ${user.tag} to ${teamName}.`);
