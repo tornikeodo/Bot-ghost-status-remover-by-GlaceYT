@@ -216,10 +216,10 @@ client.on('interactionCreate', async interaction => {
         const information = interaction.options.getString('information');
     
         if (usedFriendlyCommand.has(interaction.user.id)) {
-          await interaction.reply('You can only use this command once per 24 hours.');
+          await interaction.reply('You can only use this command once per 1 hour.');
         } else {
           usedFriendlyCommand.add(interaction.user.id);
-          setTimeout(() => usedFriendlyCommand.delete(interaction.user.id), 24 * 60 * 60 * 1000);
+          setTimeout(() => usedFriendlyCommand.delete(interaction.user.id), 1 * 60 * 60 * 1000);
     
           const roleId = '1260910227184943238'; // Replace with the actual role ID
           const roleMention = `<@&${roleId}>`;
